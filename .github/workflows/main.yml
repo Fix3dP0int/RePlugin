@@ -1,5 +1,7 @@
 name: Deploy and Test Replugin Projects
-
+permissions:
+  contents: read
+  
 on:
   push:
     branches:
@@ -69,3 +71,39 @@ jobs:
           }
 
           # grep --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,build,.gradle} -inr '2\.3\.0' .
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: test
+        run: |
+          rp_test(){
+          	local projects=(
+          		# replugin-sample/host/app
+          		replugin-sample/host
+          		# replugin-sample/plugin/plugin-demo1/app
+          		replugin-sample/plugin/plugin-demo1
+          		# replugin-sample/plugin/plugin-demo2/app
+          		replugin-sample/plugin/plugin-demo2
+          		# replugin-sample/plugin/plugin-demo3-kotlin/app
+          		replugin-sample/plugin/plugin-demo3-kotlin
+          		# replugin-sample/plugin/plugin-webview/app
+          		replugin-sample/plugin/plugin-webview
+          		# replugin-sample-extra/fresco/FrescoHost/app
+          		replugin-sample-extra/fresco/FrescoHost
+          		# replugin-sample-extra/fresco/FrescoPlugin/app
+          		replugin-sample-extra/fresco/FrescoPlugin
+          	)
+          	local log=${RP_BASE_DIR}/build/rp_test.log && [[ -f $log ]] && rm -f $log && touch $log
+          	local current=`pwd`
+          	for p in ${projects}; do
+          		local p=${RP_BASE_DIR}/${p}
+          		echo -e ">>> BUILDING ${RP_BASE_DIR}/${p}"
+          		cd ${p} && { __gradle_exec -p ${p} clean asDebug  }
+          		ls -l ${p}/app/build/outputs/apk
+          	done
+          	cd ${current}
+          }
+        
