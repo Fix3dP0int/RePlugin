@@ -1,0 +1,71 @@
+name: Deploy and Test Replugin Projects
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v 4.2.2
+
+      # 2. Set up JDK 11
+      - name: Set up JDK 11
+        uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # 4.5.0
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      # 3. Execute deploy script
+      - name: Run deploy script
+        run: |
+          #!/bin/bash
+          
+          export RP_BASE_DIR=$(cd "$(dirname "$0")"; pwd)
+
+          export TARGET_PROJECTS=(
+          replugin-host-gradle
+          replugin-host-library
+          replugin-plugin-gradle
+          replugin-plugin-library
+          )
+
+          __gradle_exec(){ if [[ -x gradlew ]];then ./gradlew ${@}; else gradle ${@}; fi; }
+
+          __rp_deploy_project(){
+              [[ ! -d ${1} ]] && echo ">>> INVALID ${1}!!! <<<" && return
+              # execute deploying
+              echo ">>> ${1} <<<" && cd ${1} && __gradle_exec -p ${1} clean bintrayUpload
+              # revert changed files
+              git checkout ${1}
+          }
+
+          rp_revert_AppConstant(){
+              git status -s | sed s/^...// | grep '/AppConstant.groovy' | git checkout ${f}
+          }
+
+          rp_deploy(){
+              local current=`pwd` && cd ${RP_BASE_DIR}
+              # revert AppConstant.groovy
+              rp_revert_AppConstant
+              # saving all changes: git stash save "saving stash for deploying!!!"
+              # deploy
+              for p in ${TARGET_PROJECTS}; do __rp_deploy_project ${RP_BASE_DIR}/${p}; done
+              # revert local changes: git revert --hard HEAD; git stash pop
+              rp_revert_AppConstant
+              # back
+              cd ${current}
+          }
+
+          # grep --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,build,.gradle} -inr '2\.3\.0' .
