@@ -98,13 +98,12 @@ jobs:
           	)
           	local log=${RP_BASE_DIR}/build/rp_test.log && [[ -f $log ]] && rm -f $log && touch $log
           	local current=`pwd`
-          	for p in ${projects}; do
-          		local p=${RP_BASE_DIR}/${p}
-          		echo -e ">>> BUILDING ${RP_BASE_DIR}/${p}"
-          		cd ${p} && { __gradle_exec -p ${p} clean asDebug  }
-          		ls -l ${p}/app/build/outputs/apk
-          	done
-          	cd ${current}
+            for p in ${projects}; do
+              echo -e ">>> BUILDING ${RP_BASE_DIR}/${p}"
+              cd "${RP_BASE_DIR}/${p}" && { __gradle_exec -p "${RP_BASE_DIR}/${p}" clean asDebug; }
+              ls -l "${RP_BASE_DIR}/${p}/app/build/outputs/apk"
+            done
+            cd ${current}
           }
         
 
