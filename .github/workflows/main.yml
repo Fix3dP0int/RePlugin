@@ -1,6 +1,5 @@
 name: build and test
-permissions:
-  contents: read-all
+permissions: read-all
   
 on:
   push:
@@ -15,8 +14,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions: 
-        contents: read-all
+    permissions: read-all
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v 4.2.2
@@ -71,8 +69,7 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: read-all
+    permissions: read-all
     steps:
       - name: test
         run: |
