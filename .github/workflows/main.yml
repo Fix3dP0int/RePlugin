@@ -64,7 +64,7 @@ jobs:
                 # back
                 cd ${current}
             }
-            rp_deploy()
+            rp_deploy
           
 
   test:
@@ -100,4 +100,4 @@ jobs:
             done
             cd ${current}
           }
-          rp_test()
+          rp_test
